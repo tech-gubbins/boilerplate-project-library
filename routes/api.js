@@ -17,10 +17,19 @@ module.exports = function (app) {
 		// GET all books
 		.get(async (req, res) => {
 			try {
-				const books = await Book.find({}).select('title _id comment_count');
-				res.json(books);
+				// Fetch all books, but explicitly select and compute the required fields
+				const books = await Book.find({}).select('title _id comments');
+
+				// Map the books to include commentcount
+				const booksWithCommentCount = books.map((book) => ({
+					title: book.title,
+					_id: book._id,
+					commentcount: book.comments ? book.comments.length : 0,
+				}));
+
+				res.json(booksWithCommentCount);
 			} catch (err) {
-				res.status(500).json({ error: 'Error retreiving books' });
+				res.status(500).json({ error: 'Error retrieving books' });
 			}
 		})
 
@@ -36,7 +45,7 @@ module.exports = function (app) {
 				const newBook = new Book({
 					title,
 					comments: [],
-					comment_count: 0,
+					commentcount: 0,
 				});
 
 				const savedBook = await newBook.save();
@@ -52,9 +61,20 @@ module.exports = function (app) {
 		// DELETE all books
 		.delete(async (req, res) => {
 			try {
-				await Book.deleteMang({});
-				res.json('complete delete successful');
+				const result = await Book.deleteMany({});
+
+				// Only send 'complete delete successful' if at least one book was deleted
+				if (result.deletedCount > 0) {
+					return res.send('complete delete successful');
+				}
+
+				// If no books were deleted, indicate as such
+				return res.status(404).send('no books to delete');
 			} catch (err) {
+				// Log error for server-side debugging
+				console.error('Delete books error:', err);
+
+				// Send a 500 status with error message
 				res.status(500).json({ error: 'Error deleting books' });
 			}
 		});
@@ -97,7 +117,7 @@ module.exports = function (app) {
 				}
 
 				book.comments.push(comment);
-				book.comment_count += 1;
+				book.commentcount += 1;
 
 				const updatedBook = await book.save();
 
