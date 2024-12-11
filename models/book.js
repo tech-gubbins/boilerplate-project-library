@@ -10,7 +10,7 @@ const BookSchema = new mongoose.Schema({
 			type: String,
 		},
 	],
-	commentCount: {
+	comment_count: {
 		type: Number,
 		default: 0,
 	},
