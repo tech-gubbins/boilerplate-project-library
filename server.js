@@ -22,10 +22,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // 
 // Connect to local MongoDB
 // 
-mongoose.connect(process.env.DB, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
+mongoose.connect(process.env.DB);
 
 //Index page (static HTML)
 app.route('/')
